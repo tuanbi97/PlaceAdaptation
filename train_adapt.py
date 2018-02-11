@@ -156,24 +156,3 @@ for epoch in range(1, epochs + 1):
     print("%s: adv_loss: %s map_loss: %s" % (epoch, extract(adv_loss)[0], extract(map_loss)[0]))
 
 f.close()
-
-'''for i in range(0, 2):
-    loader = target_loader
-    (input, target) = next(iter(loader))
-    for j in range(0, batch_size):
-        print (input.size(),' ', target.size())
-        #print (input.numpy()[j] * 255)
-        pixels = np.uint8(input.numpy()[j] * 255)
-        pixels = np.swapaxes(pixels, 0, 1)
-        pixels = np.swapaxes(pixels, 1, 2)
-        print (np.shape(pixels))
-        im = Image.fromarray(pixels)
-        im.show()'''
-'''for i, (input, target) in enumerate(target_loader):
-    target = target.cuda(async=True)
-    input_var = torch.autograd.Variable(input)
-    #p = input_var.data.numpy()
-
-    target_var = torch.autograd.Variable(target)
-    output = target.features(input_var)
-    print (output.size())'''
