@@ -1,0 +1,92 @@
+Requirements
+	placeMIT anh goc -> placeMIT anh tranh ve
+	domain bridge: code convert original image to npr 
+		Network or other algorithms
+	implement:
+		origin:
+			source -> source feat
+			target -> source feat
+			restore features level
+		new:
+			source -> new feat
+			target -> new feat
+			new classifier
+
+placeMIT 365places
+SHREC2018 10 classes:
+	river
+	barn
+	castle
+	beach
+	bedroom
+	classroom
+	kitchen
+	library
+	mountain
+	desert
+
+Tools:
+	python3
+	pytorch
+	torchvision
+	AlexNet
+	Ram?
+	GPU mem?
+	Time Train?
+	Time Test?
+
+Implementation:
+	AlexNet
+		feature: relu5
+	copy model?
+	crop model?
+	train model? 
+		optimizer.zero_grad() //set gradient buffers to zero
+		output = net(input) //feed forward
+		loss = criterion(output, target) //get loss value
+		loss.backward() //update gradient
+		optimizer.step() //update parameters
+	get layers? for param in model.parameters():
+	set fixed variables? variable.requires_grad = false optim.Adam(filter(lamdba p: p.requires_grad, p.parameters()))
+	out of memory => set fixed some conv layers
+
+sourcedata:
+	barn		5000
+	beach		5000
+	bedroom		5000
+	castle		5000
+	classroom	5000
+	desert		5000
+	kitchen		5000
+	library		5000
+	mountain	5000
+	river		5000
+
+targetdata
+	barn		31
+	beach		28
+	bedroom		30
+	castle		30
+	classroom	29
+	desert		26
+	kitchen		30
+	library		27
+	mountain	25
+	river		26
+
+1) Adaptation on 1 class
+	AlexNet
+	Test on 200 source images and 31 target images on class barn
+2) Adaptation on 2 classes
+	AlexNet
+	Test on 
+		400 source images (barn 200, castle 200)
+		61 target images (barn 31, castle 30)
+3) Adaptation on 4 classes
+
+Notice:
+	- Some pictures have small object (far from object)
+	- Choose source data from high accuracy images
+
+
+9600
