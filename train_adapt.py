@@ -94,7 +94,7 @@ sourcemodel.cuda()
 print (sourcemodel)
 targetmodel = copy.deepcopy(sourcemodel)
 targetmodel.cuda()
-print (targetmodel)
+#print (targetmodel)
 for i, param in enumerate(targetmodel.parameters()):
     if (i >= 10): param.requires_grad = False
 
@@ -105,8 +105,8 @@ for i, param in enumerate(targetmodel.parameters()):
 D = Discriminator(input_size=d_input_size,hidden_size= d_hidden_size, output_size=d_output_size)
 D.cuda()
 print (D)
-source_adv_label = autograd.Variable(torch.LongTensor(batch_size).zero_())
-target_adv_label = autograd.Variable(torch.LongTensor(batch_size).zero_() + 1)
+source_adv_label = autograd.Variable(torch.LongTensor(batch_size).zero_()).cuda()
+target_adv_label = autograd.Variable(torch.LongTensor(batch_size).zero_() + 1).cuda()
 adv_label =  torch.cat((source_adv_label, target_adv_label), 0).cuda()
 
 #Define loss function and optimizer
@@ -123,6 +123,7 @@ for epoch in range(1, epochs + 1):
         #adjust learning rate
         #adjust_lr(optimizer=target_optimizer, epoch=epoch)
 
+    #Train discriminator
     #Get data from 2 domain
     (source, _) = next(iter(source_loader))
     (target, _) = next(iter(target_loader))
@@ -137,18 +138,22 @@ for epoch in range(1, epochs + 1):
     adv_feat = torch.cat((sm.view(batch_size, -1), tm.view(batch_size, -1)), 0)
     #print (adv_feat.size())
 
-    #Train discriminator
     D.zero_grad()
     logits = D(adv_feat)
     #print (logits.size())
     adv_loss = criterion(logits, adv_label)
-    adv_loss.backward(retain_graph=True)
+    adv_loss.backward()
     discriminator_optimizer.step()
 
     #Train target mapper
     targetmodel.zero_grad()
-    logits = D(adv_feat)
-    map_loss = criterion(logits, 1 - adv_label)
+    (target, _) = next(iter(target_loader))
+    t = torch.autograd.Variable(target).cuda()
+    tm = targetmodel.features(t)
+    tm = tm.view(batch_size, -1)
+    logits = D(tm)
+    #print (logits.size())
+    map_loss = criterion(logits, 1 - target_adv_label)
     map_loss.backward()
     target_optimizer.step()
 
