@@ -23,16 +23,16 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
 
-arch = 'alexnet'
+arch = 'wideresnet18'
 num_classes = 365
 batch_size = 40
 epochs = 10000
 d_input_size = 512
-d_hidden_size = 200
+d_hidden_size = 500
 d_output_size = 2
-d_lr = 1e-6
-target_lr = 1e-5
-stepsize = 150
+d_lr = 1e-5
+target_lr = 1e-6
+stepsize = 50
 
 class Discriminator(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
@@ -49,6 +49,9 @@ class Discriminator(nn.Module):
 
 def extract(v):
     return v.data.storage().tolist()
+
+def hook_feature(module, input, output):
+    features_blobs.append(output)
 
 def adjust_lr(optimizer, epoch):
     lr = target_lr * (0.1 ** (epoch // stepsize))
@@ -93,11 +96,18 @@ else:
 sourcemodel = model
 sourcemodel.cuda()
 print (sourcemodel)
+
 targetmodel = copy.deepcopy(sourcemodel)
 targetmodel.cuda()
-#print (targetmodel)
+
+#Hook function to get features
+sourcemodel._modules.get('avgpool').register_forward_hook(hook_feature)
+targetmodel._modules.get('avgpool').register_forward_hook(hook_feature)
+
 for i, param in enumerate(targetmodel.parameters()):
-    if (i >= 10): param.requires_grad = False
+    if (i >= 60):
+        param.requires_grad = False
+    #print (i, ' ', param.size())
 
 #for param in targetmodel.parameters():
 #    print (param.requires_grad, ' ', param.size())
@@ -118,6 +128,8 @@ target_optimizer = optim.Adam(filter(lambda p: p.requires_grad, targetmodel.para
 #Save loss
 f = open('Loss.txt', 'w')
 
+features_blobs = []
+
 for epoch in range(1, epochs + 1):
     if (epoch % stepsize == 0):
         torch.save(targetmodel, arch + str(epoch))
@@ -129,11 +141,14 @@ for epoch in range(1, epochs + 1):
     (source, _) = next(iter(source_loader))
     (target, _) = next(iter(target_loader))
 
+    features_blobs = []
     #Get features map of 2 domain
     s = torch.autograd.Variable(source).cuda()
-    sm = sourcemodel.features(s)
+    sourcemodel.forward(s)
+    sm = features_blobs[0] #source features
     t = torch.autograd.Variable(target).cuda()
-    tm = targetmodel.features(t)
+    targetmodel.forward(t)
+    tm = features_blobs[1] #target features
 
     #Features for training discriminator
     adv_feat = torch.cat((sm.view(batch_size, -1), tm.view(batch_size, -1)), 0)
@@ -150,14 +165,14 @@ for epoch in range(1, epochs + 1):
     targetmodel.zero_grad()
     (target, _) = next(iter(target_loader))
     t = torch.autograd.Variable(target).cuda()
-    tm = targetmodel.features(t)
+    targetmodel.forward(t)
+    tm = features_blobs[2]
     tm = tm.view(batch_size, -1)
     logits = D(tm)
-    #print (logits.size())
     map_loss = criterion(logits, 1 - target_adv_label)
     map_loss.backward()
     target_optimizer.step()
-
+    
     f.write(str(epoch) + str(extract(adv_loss)[0]) + str(extract(map_loss)[0]) + '\n')
     print("%s: adv_loss: %s map_loss: %s" % (epoch, extract(adv_loss)[0], extract(map_loss)[0]))
 
