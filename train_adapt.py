@@ -27,8 +27,8 @@ arch = 'alexnet'
 num_classes = 365
 batch_size = 40
 epochs = 10000
-d_input_size = 9216
-d_hidden_size = 500
+d_input_size = 512
+d_hidden_size = 200
 d_output_size = 2
 d_lr = 1e-6
 target_lr = 1e-5
@@ -81,7 +81,8 @@ target_loader = torch.utils.data.DataLoader(
     num_workers=1, pin_memory=True)
 
 #Load model
-model_file = 'whole_%s_places365_python36.pth.tar' % arch
+#model_file = 'whole_%s_places365_python36.pth.tar' % arch
+model_file = 'alexnetplusCAM_places205.pth'
 useGPU = 1
 if useGPU == 1:
     model = torch.load(model_file)
