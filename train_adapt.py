@@ -82,7 +82,7 @@ target_loader = torch.utils.data.DataLoader(
 
 #Load model
 #model_file = 'whole_%s_places365_python36.pth.tar' % arch
-model_file = 'alexnetplusCAM_places205.pth'
+model_file = 'whole_wideresnet18_places365_python36.pth.tar'
 useGPU = 1
 if useGPU == 1:
     model = torch.load(model_file)
