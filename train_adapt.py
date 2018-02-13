@@ -4,6 +4,7 @@
 # Bolei Zhou
 
 import argparse
+import glob
 import os
 import shutil
 import time
@@ -22,6 +23,7 @@ import torch.utils.data
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
+from torchvision import transforms as trn
 
 arch = 'wideresnet18'
 num_classes = 365
@@ -59,7 +61,6 @@ def adjust_lr(optimizer, epoch):
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
-
 # Initialize dataloader
 normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
@@ -71,7 +72,7 @@ source_loader = torch.utils.data.DataLoader(
         normalize,
     ])),
     batch_size=batch_size, shuffle=True,
-    num_workers=1, pin_memory=True)
+    num_workers=4, pin_memory=True)
 
 target_loader = torch.utils.data.DataLoader(
     datasets.ImageFolder('targettest', transforms.Compose([
@@ -81,7 +82,7 @@ target_loader = torch.utils.data.DataLoader(
         normalize,
     ])),
     batch_size=batch_size, shuffle=True,
-    num_workers=1, pin_memory=True)
+    num_workers=4, pin_memory=True)
 
 #Load model
 #model_file = 'whole_%s_places365_python36.pth.tar' % arch
@@ -157,7 +158,7 @@ for epoch in range(1, epochs + 1):
     D.zero_grad()
     logits = D(adv_feat)
     #print (logits.size())
-    adv_loss = criterion(logits, adv_label)
+    adv_loss = criterion(logits.cuda(), adv_label)
     adv_loss.backward()
     discriminator_optimizer.step()
 
@@ -172,8 +173,52 @@ for epoch in range(1, epochs + 1):
     map_loss = criterion(logits, 1 - target_adv_label)
     map_loss.backward()
     target_optimizer.step()
-    
-    f.write(str(epoch) + ' ' + str(extract(adv_loss)[0]) + ' ' + str(extract(map_loss)[0]) + '\n')
-    print("%s: adv_loss: %s map_loss: %s" % (epoch, extract(adv_loss)[0], extract(map_loss)[0]))
+
+    if (epoch % 10 == 0):
+        '''centre_crop = trn.Compose([
+            trn.Resize((256, 256)),
+            trn.CenterCrop(224),
+            trn.ToTensor(),
+            trn.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ])
+        class10 = ['barn', 'beach', 'bedroom', 'castle', 'classroom', 'desert', 'kitchen', 'library', 'mountain',
+                   'river']
+        imgs = []
+        for c in class10:
+            imgs = imgs + glob.glob('sourcetest/' + c + '/*.jpg')
+        source_loss = 0
+        for img_name in imgs:
+            features_blobs = []
+            img = Image.open(img_name)
+            input_img = torch.autograd.Variable(centre_crop(img).unsqueeze(0), volatile=True).cuda()
+            sourcemodel.forward(input_img)
+            feature = features_blobs[0].view(1, -1)
+            logits = D.forward(feature)
+            label = autograd.Variable(torch.LongTensor(1).zero_()).cuda()
+            loss = criterion(logits, label)
+            source_loss = source_loss + extract(loss)[0]
+
+        source_loss = source_loss / len(imgs)
+
+        imgs = []
+        for c in class10:
+            imgs = imgs + glob.glob('targettest/' + c + '/*.jpg')
+        target_loss = 0
+        for img_name in imgs:
+            features_blobs = []
+            img = Image.open(img_name)
+            input_img = torch.autograd.Variable(centre_crop(img).unsqueeze(0), volatile=True).cuda()
+            targetmodel.forward(input_img)
+            feature = features_blobs[0].view(1, -1)
+            logits = D.forward(feature)
+            label = autograd.Variable(torch.LongTensor(1).zero_()).cuda()
+            loss = criterion(logits, label)
+            target_loss = target_loss + extract(loss)[0]
+
+        target_loss = target_loss / len(imgs)'''
+        #f.write(str(epoch) + ' ' + str(extract(adv_loss)[0]) + ' ' + str(extract(map_loss)[0]) + ' ' + str(source_loss) + ' ' + str(target_loss) + '\n')
+        #print("%s: adv_loss: %s map_loss: %s source_loss: %s target_loss: %s" % (epoch, extract(adv_loss)[0], extract(map_loss)[0], source_loss, target_loss))
+        f.write(str(epoch) + ' ' + str(extract(adv_loss)[0]) + ' ' + str(extract(map_loss)[0]))
+        print("%s: adv_loss: %s map_loss: %s " % (epoch, extract(adv_loss)[0], extract(map_loss)[0]))
 
 f.close()
