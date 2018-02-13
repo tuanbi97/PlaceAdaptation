@@ -173,7 +173,7 @@ for epoch in range(1, epochs + 1):
     map_loss.backward()
     target_optimizer.step()
     
-    f.write(str(epoch) + str(extract(adv_loss)[0]) + str(extract(map_loss)[0]) + '\n')
+    f.write(str(epoch) + ' ' + str(extract(adv_loss)[0]) + ' ' + str(extract(map_loss)[0]) + '\n')
     print("%s: adv_loss: %s map_loss: %s" % (epoch, extract(adv_loss)[0], extract(map_loss)[0]))
 
 f.close()

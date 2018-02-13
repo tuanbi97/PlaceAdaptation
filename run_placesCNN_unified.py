@@ -134,7 +134,7 @@ weight_softmax = params[-2].data.numpy()
 weight_softmax[weight_softmax<0] = 0
 
 # load the test image
-img = Image.open('targettest/barn/19.jpg')
+img = Image.open('targettest/barn/86.jpg')
 input_img = V(tf(img).unsqueeze(0), volatile=True)
 
 # forward pass
@@ -168,7 +168,7 @@ print('Class activation map is saved as cam.jpg')
 CAMs = returnCAM(features_blobs[0], weight_softmax, [idx[0]])
 
 # render the CAM and output
-img = cv2.imread('targettest/barn/19.jpg')
+img = cv2.imread('targettest/barn/86.jpg')
 height, width, _ = img.shape
 heatmap = cv2.applyColorMap(cv2.resize(CAMs[0],(width, height)), cv2.COLORMAP_JET)
 result = heatmap * 0.4 + img * 0.5
