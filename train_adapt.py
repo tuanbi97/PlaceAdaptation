@@ -75,7 +75,7 @@ source_loader = torch.utils.data.DataLoader(
     num_workers=4, pin_memory=True)
 
 target_loader = torch.utils.data.DataLoader(
-    datasets.ImageFolder('targettest', transforms.Compose([
+    datasets.ImageFolder('targettest_70', transforms.Compose([
         transforms.RandomSizedCrop(224),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
@@ -83,6 +83,17 @@ target_loader = torch.utils.data.DataLoader(
     ])),
     batch_size=batch_size, shuffle=True,
     num_workers=4, pin_memory=True)
+
+# load the class label
+file_name = 'categories_places365.txt'
+if not os.access(file_name, os.W_OK):
+    synset_url = 'https://raw.githubusercontent.com/csailvision/places365/master/categories_places365.txt'
+    os.system('wget ' + synset_url)
+classes = list()
+with open(file_name) as class_file:
+    for line in class_file:
+        classes.append(line.strip().split(' ')[0][3:])
+classes = tuple(classes)
 
 #Load model
 #model_file = 'whole_%s_places365_python36.pth.tar' % arch
@@ -130,6 +141,7 @@ target_optimizer = optim.Adam(filter(lambda p: p.requires_grad, targetmodel.para
 f = open('Loss.txt', 'w')
 
 features_blobs = []
+best_loss = 100000
 
 for epoch in range(1, epochs + 1):
     if (epoch % stepsize == 0):
@@ -175,50 +187,46 @@ for epoch in range(1, epochs + 1):
     target_optimizer.step()
 
     if (epoch % 10 == 0):
-        '''centre_crop = trn.Compose([
+        f.write(str(epoch) + ' ' + str(extract(adv_loss)[0]) + ' ' + str(extract(map_loss)[0]) + '\n')
+        print("%s: adv_loss: %s map_loss: %s " % (epoch, extract(adv_loss)[0], extract(map_loss)[0]))
+
+        centre_crop = trn.Compose([
             trn.Resize((256, 256)),
             trn.CenterCrop(224),
             trn.ToTensor(),
             trn.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
-        class10 = ['barn', 'beach', 'bedroom', 'castle', 'classroom', 'desert', 'kitchen', 'library', 'mountain',
-                   'river']
-        imgs = []
-        for c in class10:
-            imgs = imgs + glob.glob('sourcetest/' + c + '/*.jpg')
-        source_loss = 0
-        for img_name in imgs:
-            features_blobs = []
-            img = Image.open(img_name)
-            input_img = torch.autograd.Variable(centre_crop(img).unsqueeze(0), volatile=True).cuda()
-            sourcemodel.forward(input_img)
-            feature = features_blobs[0].view(1, -1)
-            logits = D.forward(feature)
-            label = autograd.Variable(torch.LongTensor(1).zero_()).cuda()
-            loss = criterion(logits, label)
-            source_loss = source_loss + extract(loss)[0]
+        class10 = ['barn', 'beach', 'bedroom', 'castle', 'classroom', 'desert', 'kitchen', 'library', 'mountain', 'river']
 
-        source_loss = source_loss / len(imgs)
-
-        imgs = []
-        for c in class10:
-            imgs = imgs + glob.glob('targettest/' + c + '/*.jpg')
         target_loss = 0
-        for img_name in imgs:
-            features_blobs = []
-            img = Image.open(img_name)
-            input_img = torch.autograd.Variable(centre_crop(img).unsqueeze(0), volatile=True).cuda()
-            targetmodel.forward(input_img)
-            feature = features_blobs[0].view(1, -1)
-            logits = D.forward(feature)
-            label = autograd.Variable(torch.LongTensor(1).zero_()).cuda()
-            loss = criterion(logits, label)
-            target_loss = target_loss + extract(loss)[0]
+        s = ''
+        for c in class10:
+            imgs = glob.glob('targettest_70/' + c + '/*.jpg')
+            #print (len(imgs))
+            class_loss = 0
+            ct = 0
+            for cli in range(0, 365):
+                if (classes[cli] == c or (classes[cli] == 'desert/sand' and c in classes[cli]) or (classes[cli] == 'library/indoor' and c in classes[cli])):
+                    ct = cli
+                    break
+            for img_name in imgs:
+                img = Image.open(img_name)
+                input_img = torch.autograd.Variable(centre_crop(img).unsqueeze(0), volatile=True).cuda()
+                logit = targetmodel.forward(input_img)
+                label = autograd.Variable(torch.LongTensor(1).zero_() + ct).cuda()
+                loss = criterion(logit, label)
+                class_loss = class_loss + extract(loss)[0]
+            s = s + str(class_loss) + ' '
+            target_loss = target_loss + class_loss
+        f.write(s + '\n')
+        f.write(str(target_loss) + '\n')
+        print('loss_per_class: ' + s)
+        print('target_loss: ', target_loss)
+        if (target_loss < best_loss):
+            torch.save(targetmodel, arch + str(epoch))
 
-        target_loss = target_loss / len(imgs)'''
         #f.write(str(epoch) + ' ' + str(extract(adv_loss)[0]) + ' ' + str(extract(map_loss)[0]) + ' ' + str(source_loss) + ' ' + str(target_loss) + '\n')
         #print("%s: adv_loss: %s map_loss: %s source_loss: %s target_loss: %s" % (epoch, extract(adv_loss)[0], extract(map_loss)[0], source_loss, target_loss))
-        f.write(str(epoch) + ' ' + str(extract(adv_loss)[0]) + ' ' + str(extract(map_loss)[0]))
-        print("%s: adv_loss: %s map_loss: %s " % (epoch, extract(adv_loss)[0], extract(map_loss)[0]))
+
 
 f.close()
