@@ -5,6 +5,7 @@
 
 import torch
 from torch.autograd import Variable as V
+import torch.nn as nn
 import torchvision.models as models
 from torchvision import transforms as trn
 from torch.nn import functional as F
@@ -15,11 +16,23 @@ from PIL import Image
 
 # th architecture to use
 arch = 'wideresnet18'
-model_file = 'wideresnet183270'
-#model_file = 'whole_wideresnet18_places365_python36.pth.tar'
+#model_file = 'wideresnet181750'
+model_file = 'whole_wideresnet18_places365_python36.pth.tar'
+classifier_file = 'classifier22_origin'
 #save_file = 'TargetAlexNetAdaptation9600.csv'
-save_file = 'TargetResNet183270.csv'
+save_file = 'TargetResNet18_origin_classifier_train.csv'
 class10 = ['barn', 'beach', 'bedroom', 'castle', 'classroom', 'desert', 'kitchen', 'library', 'mountain', 'river']
+
+class Classifier(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size):
+        super(Classifier, self).__init__()
+        self.fc = nn.Linear(input_size, hidden_size)
+        self.out = nn.Linear(hidden_size, output_size)
+
+    def forward(self, x):
+        x = F.relu(self.fc(x))
+        x = self.out(x)
+        return x
 
 def hook_feature(module, input, output):
     features_blobs.append(output)
@@ -46,9 +59,14 @@ else:
 #torch.save(model, 'whole_%s_places365_python36.pth.tar'%arch)
 
 model.cuda()
+model._modules.get('avgpool').register_forward_hook(hook_feature)
 print (model)
 
 model.eval()
+
+classifier = torch.load(classifier_file)
+print (classifier)
+classifier.eval()
 
 # load the image transformer
 centre_crop = trn.Compose([
@@ -58,51 +76,42 @@ centre_crop = trn.Compose([
         trn.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 ])
 
-
-# load the class label
-file_name = 'categories_places365.txt'
-if not os.access(file_name, os.W_OK):
-    synset_url = 'https://raw.githubusercontent.com/csailvision/places365/master/categories_places365.txt'
-    os.system('wget ' + synset_url)
-classes = list()
-with open(file_name) as class_file:
-    for line in class_file:
-        classes.append(line.strip().split(' ')[0][3:])
-classes = tuple(classes)
-
 # load the test image
 imgs = []
 for c in class10:
-	imgs = imgs + glob.glob('targettest_30/' + c + '/*.jpg')
+	imgs = imgs + glob.glob('targettest_70/' + c + '/*.jpg')
 fout = open(save_file, 'w') 
 s = 'image_name'
 for c in class10:
-	s = s + ',' + c
+    s = s + ',' + c
 s = s + ',top 1'
 fout.write(s + '\n')
 
 features_blobs = []
 
 for img_name in imgs:
-	img = Image.open(img_name)
-	#print (np.array(img).shape)
-	input_img = V(centre_crop(img).unsqueeze(0), volatile=True).cuda()
+    features_blobs = []
+    img = Image.open(img_name)
+    #print (np.array(img).shape)
+    input_img = V(centre_crop(img).unsqueeze(0), volatile=True).cuda()
 
-	# forward pass
-	logit = model.forward(input_img)
-	h_x = F.softmax(logit, 1).data.squeeze()
+    # forward pass
+    model.forward(input_img)
+    #print (len(features_blobs))
+    feats = features_blobs[0].view(1, -1)
+    logit = classifier(feats)
+    h_x = F.softmax(logit, 1).data.squeeze()
 
-	s = img_name
-	for i in range(0, len(classes)):
-		if ((classes[i] in class10) or (classes[i] == 'desert/sand') or (classes[i] == 'library/indoor')):
-			s = s + ',{:.3f}'.format(h_x[i])
+    s = img_name
+    for i in range(0, 10):
+        s = s + ',{:.3f}'.format(h_x[i])
 
-	probs, idx = h_x.sort(0, True)
+    probs, idx = h_x.sort(0, True)
 
-	print('RESULT ON ' + img_name)
-	for i in range(0, 5):
-		print('{:.3f} -> {}'.format(probs[i], classes[idx[i]]))
-	s = s + ',' + classes[idx[0]]
-	fout.write(s +'\n')
+    print('RESULT ON ' + img_name)
+    for i in range(0, 5):
+        print('{:.3f} -> {}'.format(probs[i], class10[idx[i]]))
+    s = s + ',' + class10[idx[0]]
+    fout.write(s +'\n')
 
 fout.close()

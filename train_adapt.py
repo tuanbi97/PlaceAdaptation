@@ -34,7 +34,7 @@ d_hidden_size = 500
 d_output_size = 2
 d_lr = 1e-5
 target_lr = 1e-6
-stepsize = 50
+stepsize = 200
 
 class Discriminator(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
@@ -223,6 +223,7 @@ for epoch in range(1, epochs + 1):
         print('loss_per_class: ' + s)
         print('target_loss: ', target_loss)
         if (target_loss < best_loss):
+            best_loss = target_loss
             torch.save(targetmodel, arch + str(epoch))
 
         #f.write(str(epoch) + ' ' + str(extract(adv_loss)[0]) + ' ' + str(extract(map_loss)[0]) + ' ' + str(source_loss) + ' ' + str(target_loss) + '\n')
