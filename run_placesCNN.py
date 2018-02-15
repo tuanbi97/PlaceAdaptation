@@ -15,10 +15,10 @@ from PIL import Image
 
 # th architecture to use
 arch = 'wideresnet18'
-model_file = 'wideresnet183270'
+model_file = 'wideresnet182730'
 #model_file = 'whole_wideresnet18_places365_python36.pth.tar'
 #save_file = 'TargetAlexNetAdaptation9600.csv'
-save_file = 'TargetResNet183270.csv'
+save_file = 'TargetResNet182730.csv'
 class10 = ['barn', 'beach', 'bedroom', 'castle', 'classroom', 'desert', 'kitchen', 'library', 'mountain', 'river']
 
 def hook_feature(module, input, output):
@@ -73,7 +73,7 @@ classes = tuple(classes)
 # load the test image
 imgs = []
 for c in class10:
-	imgs = imgs + glob.glob('targettest_30/' + c + '/*.jpg')
+	imgs = imgs + glob.glob('targettest/' + c + '/*.jpg')
 fout = open(save_file, 'w') 
 s = 'image_name'
 for c in class10:

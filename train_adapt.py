@@ -34,7 +34,7 @@ d_hidden_size = 500
 d_output_size = 2
 d_lr = 1e-5
 target_lr = 1e-6
-stepsize = 200
+stepsize = 150
 
 class Discriminator(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
@@ -75,7 +75,7 @@ source_loader = torch.utils.data.DataLoader(
     num_workers=4, pin_memory=True)
 
 target_loader = torch.utils.data.DataLoader(
-    datasets.ImageFolder('targettest_70', transforms.Compose([
+    datasets.ImageFolder('targettest', transforms.Compose([
         transforms.RandomSizedCrop(224),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
@@ -138,14 +138,14 @@ discriminator_optimizer = optim.Adam(D.parameters(), lr = d_lr)
 target_optimizer = optim.Adam(filter(lambda p: p.requires_grad, targetmodel.parameters()), lr = target_lr)
 
 #Save loss
-f = open('Loss.txt', 'w')
+f = open('Loss_adaptation.txt', 'w')
 
 features_blobs = []
 best_loss = 100000
 
 for epoch in range(1, epochs + 1):
-    if (epoch % stepsize == 0):
-        torch.save(targetmodel, arch + str(epoch))
+    #if (epoch % stepsize == 0):
+    #    torch.save(targetmodel, arch + str(epoch))
         #adjust learning rate
         #adjust_lr(optimizer=target_optimizer, epoch=epoch)
 
@@ -200,8 +200,10 @@ for epoch in range(1, epochs + 1):
 
         target_loss = 0
         s = ''
+        countim = 0
         for c in class10:
-            imgs = glob.glob('targettest_70/' + c + '/*.jpg')
+            imgs = glob.glob('targettest/' + c + '/*.jpg')
+            countim += len(imgs)
             #print (len(imgs))
             class_loss = 0
             ct = 0
@@ -216,9 +218,12 @@ for epoch in range(1, epochs + 1):
                 label = autograd.Variable(torch.LongTensor(1).zero_() + ct).cuda()
                 loss = criterion(logit, label)
                 class_loss = class_loss + extract(loss)[0]
-            s = s + str(class_loss) + ' '
+            print (c, ': ', len(imgs))
+            s = s + str(class_loss/len(imgs)) + ' '
             target_loss = target_loss + class_loss
+        print (countim)
         f.write(s + '\n')
+        target_loss = target_loss / countim
         f.write(str(target_loss) + '\n')
         print('loss_per_class: ' + s)
         print('target_loss: ', target_loss)

@@ -19,8 +19,8 @@ from PIL import Image
 # th architecture to use
 arch = 'wideresnet18'
 #model_file = 'whole_wideresnet18_places365_python36.pth.tar'
-model_file = 'wideresnet183270'
-save_file = 'Loss_classifier_3270'
+model_file = 'wideresnet182730'
+save_file = 'Loss_classifier_2730'
 batch_size = 10
 epochs = 10000
 lr = 1e-3
