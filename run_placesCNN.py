@@ -102,11 +102,18 @@ for img_name in imgs:
 	h_x = F.softmax(logit, 1).data.squeeze()
 
 	s = img_name
+	for i in range(0, len(class30)):
+		class_name = class30[i]
+		if (class_name == 'great_pyramid'):
+			s = s + ', 0'
+			continue
+		for j in range(0, len(classes)):
+			if (classes[j] == class_name):
+				s = s + ',{:.3f}'.format(h_x[j])
+				break
 	for i in range(0, len(classes)):
 		if (classes[i] in class30):
 			s = s + ',{:.3f}'.format(h_x[i])
-		else:
-			s = s + ',0'
 
 	probs, idx = h_x.sort(0, True)
 
