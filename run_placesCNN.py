@@ -82,7 +82,7 @@ classes = tuple(classes)
 # load the test image
 imgs = []
 for c in class30:
-	imgs = imgs + glob.glob('targettest_70/' + c + '/*')
+	imgs = imgs + glob.glob('targettest_70/' + c + '/*.jpg')
 fout = open(save_file, 'w') 
 s = 'image_name'
 for c in class30:
