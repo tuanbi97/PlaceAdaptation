@@ -75,7 +75,7 @@ source_loader = torch.utils.data.DataLoader(
     num_workers=4, pin_memory=True)
 
 target_loader = torch.utils.data.DataLoader(
-    datasets.ImageFolder('targettest', transforms.Compose([
+    datasets.ImageFolder('targettest_70', transforms.Compose([
         transforms.RandomSizedCrop(224),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
@@ -200,7 +200,7 @@ for epoch in range(1, epochs + 1):
         s = ''
         countim = 0
         for c in class10:
-            imgs = glob.glob('targettest/' + c + '/*.jpg')
+            imgs = glob.glob('targettest_70/' + c + '/*.jpg')
             countim += len(imgs)
             #print (len(imgs))
             class_loss = 0
