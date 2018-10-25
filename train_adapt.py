@@ -115,10 +115,10 @@ sourcemodel._modules.get('avgpool').register_forward_hook(hook_feature)
 targetmodel._modules.get('avgpool').register_forward_hook(hook_feature)
 
 for i, param in enumerate(targetmodel.parameters()):
-    print(param.data)
+    #print(param.data)
     if (i >= 60):
         param.requires_grad = False
-    #print (i, ' ', param.size())
+    print (i, ' ', param.size())
 
 #for param in targetmodel.parameters():
 #    print (param.requires_grad, ' ', param.size())
