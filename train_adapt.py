@@ -86,13 +86,10 @@ target_loader = torch.utils.data.DataLoader(
 
 # load the class label
 file_name = 'categories_places365.txt'
-if not os.access(file_name, os.W_OK):
-    synset_url = 'https://raw.githubusercontent.com/csailvision/places365/master/categories_places365.txt'
-    os.system('wget ' + synset_url)
 classes = list()
 with open(file_name) as class_file:
     for line in class_file:
-        classes.append(line.strip().split(' ')[0][3:])
+        classes.append(line.strip().split(' ')[0])
 classes = tuple(classes)
 
 #Load model
@@ -212,6 +209,7 @@ for epoch in range(1, epochs + 1):
                     ct = cli
                     break
             for img_name in imgs:
+                features_blobs = []
                 img = Image.open(img_name)
                 input_img = torch.autograd.Variable(centre_crop(img).unsqueeze(0), volatile=True).cuda()
                 logit = targetmodel.forward(input_img)
