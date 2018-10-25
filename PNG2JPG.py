@@ -13,6 +13,6 @@ for i in range(0, len(dirs)):
 		print(image_path)
 		im = Image.open(image_path)
 		im.load()
-		background = Image.new("RGB", png.size, (255, 255, 255))
+		background = Image.new("RGB", im.size, (255, 255, 255))
 		background.paste(im, mask=im.split()[3]) # 3 is the alpha channel
 		background.save(image_path[0:-4] + '.jpg')
