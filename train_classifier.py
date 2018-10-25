@@ -27,7 +27,7 @@ lr = 1e-3
 stepsize = 100
 c_input = 512
 c_hidden_size = 200
-c_output_size = 10
+c_output_size = 30
 
 class Classifier(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
