@@ -15,11 +15,20 @@ from PIL import Image
 
 # th architecture to use
 arch = 'wideresnet18'
-model_file = 'wideresnet182730'
-#model_file = 'whole_wideresnet18_places365_python36.pth.tar'
+#model_file = 'wideresnet182730'
+model_file = 'whole_wideresnet18_places365_python36.pth.tar'
 #save_file = 'TargetAlexNetAdaptation9600.csv'
-save_file = 'TargetResNet182730.csv'
+#save_file = 'TargetResNet182730.csv'
+save_file = 'BeforeAdaptation.csv'
 class10 = ['barn', 'beach', 'bedroom', 'castle', 'classroom', 'desert', 'kitchen', 'library', 'mountain', 'river']
+class30 = ['airport_terminal', 'apartment_building_outdoor' ,'arch', 'auditorium', 'conference_room', 'dam', 
+            'football_stadium', 'great_pyramid', 'hotel_room', 'office', 'phone_booth', 'reception', 'restaurant',
+            'school_house', 'shower', 'skyscraper', 'supermarket', 'waiting_room', 'water_tower', 'windmill',
+            'barn', 'beach', 'bedroom', 'castle', 'classroom', 'desert', 'kitchen', 'library', 'mountain', 'river']
+id_classes30 = {'airport_terminal': 2, 'apartment_building_outdoor': 8,'arch': 12, 'auditorium': 27, 'conference_room': 102, 'dam': 113, 
+            'football_stadium': 313, 'great_pyramid': 116, 'hotel_room': 182, 'office': 244, 'phone_booth': 263, 'reception': 280, 'restaurant' : 284,
+            'school_house': 296, 'shower': 303, 'skyscraper': 307, 'supermarket': 321, 'waiting_room': 352, 'water_tower': 354, 'windmill': 361,
+            'barn': 40, 'beach': 48, 'bedroom': 52, 'castle': 84, 'classroom': 92, 'desert': 116, 'kitchen': 203, 'library': 212, 'mountain': 232, 'river': 288}
 
 def hook_feature(module, input, output):
     features_blobs.append(output)
@@ -67,16 +76,16 @@ if not os.access(file_name, os.W_OK):
 classes = list()
 with open(file_name) as class_file:
     for line in class_file:
-        classes.append(line.strip().split(' ')[0][3:])
+        classes.append(line.strip().split(' ')[0])
 classes = tuple(classes)
 
 # load the test image
 imgs = []
-for c in class10:
-	imgs = imgs + glob.glob('targettest/' + c + '/*.jpg')
+for c in class30:
+	imgs = imgs + glob.glob('targettest_70/' + c + '/*')
 fout = open(save_file, 'w') 
 s = 'image_name'
-for c in class10:
+for c in class30:
 	s = s + ',' + c
 s = s + ',top 1'
 fout.write(s + '\n')
@@ -94,7 +103,7 @@ for img_name in imgs:
 
 	s = img_name
 	for i in range(0, len(classes)):
-		if ((classes[i] in class10) or (classes[i] == 'desert/sand') or (classes[i] == 'library/indoor')):
+		if (classes[i] in class30):
 			s = s + ',{:.3f}'.format(h_x[i])
 
 	probs, idx = h_x.sort(0, True)

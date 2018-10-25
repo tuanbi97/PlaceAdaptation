@@ -6,7 +6,7 @@ alley 4
 amphitheater 5
 amusement_arcade 6
 amusement_park 7
-apartment_building/outdoor 8
+apartment_building_outdoor 8
 aquarium 9
 aqueduct 10
 arcade 11
@@ -114,7 +114,7 @@ crosswalk 112
 dam 113
 delicatessen 114
 department_store 115
-desert/sand 116
+desert 116
 desert/vegetation 117
 desert_road 118
 diner/outdoor 119
@@ -210,7 +210,7 @@ laundromat 208
 lawn 209
 lecture_room 210
 legislative_chamber 211
-library/indoor 212
+library 212
 library/outdoor 213
 lighthouse 214
 living_room 215
@@ -294,7 +294,7 @@ ruin 292
 runway 293
 sandbox 294
 sauna 295
-schoolhouse 296
+school_house 296
 science_museum 297
 server_room 298
 shed 299
@@ -311,7 +311,7 @@ snowfield 309
 soccer_field 310
 stable 311
 stadium/baseball 312
-stadium/football 313
+football_stadium 313
 stadium/soccer 314
 stage/indoor 315
 stage/outdoor 316

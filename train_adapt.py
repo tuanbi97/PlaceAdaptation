@@ -35,6 +35,15 @@ d_output_size = 2
 d_lr = 1e-5
 target_lr = 1e-6
 stepsize = 150
+class10 = ['barn', 'beach', 'bedroom', 'castle', 'classroom', 'desert', 'kitchen', 'library', 'mountain', 'river']
+class30 = ['airport_terminal', 'apartment_building_outdoor' ,'arch', 'auditorium', 'conference_room', 'dam', 
+            'football_stadium', 'great_pyramid', 'hotel_room', 'office', 'phone_booth', 'reception', 'restaurant',
+            'school_house', 'shower', 'skyscraper', 'supermarket', 'waiting_room', 'water_tower', 'windmill',
+            'barn', 'beach', 'bedroom', 'castle', 'classroom', 'desert', 'kitchen', 'library', 'mountain', 'river']
+id_classes30 = {'airport_terminal': 2, 'apartment_building_outdoor': 8,'arch': 12, 'auditorium': 27, 'conference_room': 102, 'dam': 113, 
+            'football_stadium': 313, 'great_pyramid': 116, 'hotel_room': 182, 'office': 244, 'phone_booth': 263, 'reception': 280, 'restaurant' : 284,
+            'school_house': 296, 'shower': 303, 'skyscraper': 307, 'supermarket': 321, 'waiting_room': 352, 'water_tower': 354, 'windmill': 361,
+            'barn': 40, 'beach': 48, 'bedroom': 52, 'castle': 84, 'classroom': 92, 'desert': 116, 'kitchen': 203, 'library': 212, 'mountain': 232, 'river': 288}
 
 class Discriminator(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
@@ -118,7 +127,7 @@ for i, param in enumerate(targetmodel.parameters()):
     #print(param.data)
     if (i >= 60):
         param.requires_grad = False
-    print (i, ' ', param.size())
+    #print (i, ' ', param.size())
 
 #for param in targetmodel.parameters():
 #    print (param.requires_grad, ' ', param.size())
@@ -195,21 +204,16 @@ for epoch in range(1, epochs + 1):
             trn.ToTensor(),
             trn.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
-        class10 = ['barn', 'beach', 'bedroom', 'castle', 'classroom', 'desert', 'kitchen', 'library', 'mountain', 'river']
 
         target_loss = 0
         s = ''
         countim = 0
-        for c in class10:
-            imgs = glob.glob('targettest_70/' + c + '/*.jpg')
+        for c in class30:
+            imgs = glob.glob('targettest_70/' + c + '/*')
             countim += len(imgs)
             #print (len(imgs))
             class_loss = 0
-            ct = 0
-            for cli in range(0, 365):
-                if (classes[cli] == c or (classes[cli] == 'desert/sand' and c in classes[cli]) or (classes[cli] == 'library/indoor' and c in classes[cli])):
-                    ct = cli
-                    break
+            ct = id_classes30[c]
             for img_name in imgs:
                 features_blobs = []
                 img = Image.open(img_name)
