@@ -91,6 +91,7 @@ with open(file_name) as class_file:
     for line in class_file:
         classes.append(line.strip().split(' ')[0])
 classes = tuple(classes)
+print(classes)
 
 #Load model
 #model_file = 'whole_%s_places365_python36.pth.tar' % arch
