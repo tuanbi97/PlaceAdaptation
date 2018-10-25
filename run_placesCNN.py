@@ -111,9 +111,6 @@ for img_name in imgs:
 			if (classes[j] == class_name):
 				s = s + ',{:.3f}'.format(h_x[j])
 				break
-	for i in range(0, len(classes)):
-		if (classes[i] in class30):
-			s = s + ',{:.3f}'.format(h_x[i])
 
 	probs, idx = h_x.sort(0, True)
 
