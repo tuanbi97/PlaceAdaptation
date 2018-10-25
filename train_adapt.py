@@ -114,6 +114,7 @@ targetmodel.cuda()
 sourcemodel._modules.get('avgpool').register_forward_hook(hook_feature)
 targetmodel._modules.get('avgpool').register_forward_hook(hook_feature)
 
+print(targetmodel.parameters())
 for i, param in enumerate(targetmodel.parameters()):
     if (i >= 60):
         param.requires_grad = False
